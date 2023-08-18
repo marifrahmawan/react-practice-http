@@ -5,6 +5,8 @@ import './App.css';
 
 function App() {
   const [movieData, setMovieData] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   // useEffect(() => {
   //   try {
@@ -22,14 +24,21 @@ function App() {
   // }, []);
 
   const fetchMovie = async () => {
+    setError(null);
+    setIsLoading(true);
     try {
-      const data = await fetch('http://swapi.py4e.com/api/films/');
-      const jsonData = await data.json();
+      const response = await fetch('http://swapi.py4e.com/api/films/');
 
-      return setMovieData(jsonData.results);
+      if (response.status !== 200) {
+        throw new Error('Something went wrong !');
+      }
+
+      const jsonData = await response.json();
+      setMovieData(jsonData.results);
     } catch (error) {
-      console.log(error);
+      setError(error.message);
     }
+    setIsLoading(false);
   };
 
   console.log(movieData);
@@ -40,7 +49,10 @@ function App() {
         <button onClick={fetchMovie}>Fetch Movies</button>
       </section>
       <section>
-        <MoviesList movies={movieData} />
+        {!isLoading && movieData.length > 0 && <MoviesList movies={movieData} />}
+        {!isLoading && !error && movieData.length === 0 && <p>Found no Movies</p>}
+        {isLoading && <p>Loading . . .</p>}
+        {error && !isLoading && <p>{error}</p>}
       </section>
     </React.Fragment>
   );
